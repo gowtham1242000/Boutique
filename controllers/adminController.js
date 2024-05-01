@@ -11,7 +11,7 @@ const Categorie = require('../models/Categories');
 const Product = require('../models/Products');
 const Colour = require('../models/Colours');
 const Banner = require('../models/Banners');
-
+const User =require('../models/Users');
 const CategoriePath='/etc/ec/data/Categorie/';
 const ProductPath='/etc/ec/data/Product/';
 const ColourPath='/etc/ec/data/Colour/';
@@ -24,6 +24,86 @@ const URLpathb ='/Banner';
 
 router.use(bodyParser.json());
 router.use(fileUpload());
+
+//const TwoFactor =require('TwoFactor');
+
+const axios = require('axios');
+const speakeasy = require('speakeasy');
+
+function generateOTP() {
+  // Generate a time-based OTP
+  const secret = speakeasy.generateSecret({ length: 20 });
+  const otp = speakeasy.totp({
+    secret: secret.base32,
+    encoding: 'base32',
+  });
+  return otp;
+}
+
+exports.loginRequestOtp = async (req, res) => {
+  try {
+    const { mobilenumber } = req.body;
+    const otp = generateOTP();
+    const otpTimestamp = new Date();
+    
+    // Create user record with mobile number and OTP
+    await User.create({ mobilenumber, otp, otpTimestamp });
+
+    // Send OTP via SMS
+    await sendOTP(mobilenumber, otp);
+
+    res.status(200).json({ message: 'OTP sent successfully', otp });
+  } catch (error) {
+    console.error('Error generating OTP:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+exports.loginRequestOtp = async (req, res) => {
+  try {
+    const { mobilenumber } = req.body;
+
+    // Call the 2Factor.in API to send OTP
+    const response = await axios.get(`http://2factor.in/API/V1/9e880f4a-7dc5-11ec-b9b5-0200cd936042/SMS/${mobilenumber}/AUTOGEN2`);
+   const user =await User.create({ mobilenumber,otp:response.data.OTP,otpTimestamp:new Date()});
+console.log("user------",user); 
+    console.log('Response from 2Factor.in API:', response.data);
+
+    // Check the response and handle accordingly
+    if (response.data.Status === "Success") {
+      res.status(200).json({ message: 'OTP sent successfully',user });
+    } else {
+      res.status(500).json({ message: 'Failed to send OTP' });
+    }
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Verify OTP endpoint
+exports.loginVerifyOtp = async (req, res) => {
+  try {
+    const { mobilenumber, otp } = req.body;
+    // Find user by mobile number
+    const user = await User.findOne({ where: { mobilenumber } });
+    if (!user) {
+      return res.status(404).json({ message: 'Mobile number not found' });
+    }
+     if(otp === user.otp){
+	 await user.destroy();
+      return res.status(200).json({ message: 'OTP verified successfully' });
+    } else {
+      return res.status(400).json({ message: 'Invalid OTP or expired' });
+    }
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
 
 //create categorie
 exports.createCategorie = async (req, res) => {
@@ -483,3 +563,12 @@ exports.search =async (req,res) =>{
     }
 };
 
+
+exports.getBanner =async (req,res)=>{
+try{
+  const banner =await Banner.findAll();
+res.status(200).json(banner) 
+}catch(error){
+console.log("error",error)
+} 
+}

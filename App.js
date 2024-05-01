@@ -7,6 +7,7 @@ const editJsonFile    = require('edit-json-file');
 const db = require('./config/config');
 const adminRoutes = require('./routes/adminRoutes');
 const { Op } = require('sequelize');
+const session = require('express-session');
 //const userRoutes = require('./routes/userRoutes');
 
 // Connect to the database
@@ -16,6 +17,12 @@ db.authenticate()
 
 // Middleware
 app.use(express.json());
+
+app.use(session({
+    secret: '9e880f4a-7dc5-11ec-b9b5-0200cd936042',
+    resave: false,
+    saveUninitialized: true
+}));
 
 // Routes
 app.use(bodyParser.json());

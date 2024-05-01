@@ -14,7 +14,9 @@ router.delete('/categories/:id', adminController.deleteCategorie);
 router.delete('/banners/:id', adminController.deleteBanner);
 router.get('/getAll', adminController.getAllDetails);
 router.get('/search', adminController.search);
-
+router.get('/getBanner', adminController.getBanner);
+router.post('/loginRequestOtp', adminController.loginRequestOtp);
+router.post('/loginVerifyOtp', adminController.loginVerifyOtp);
 // const userController = require('../controllers/userController');
 
 // router.use('/tmp', express.static('tmp'));

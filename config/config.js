@@ -16,7 +16,7 @@ const operatorsAliases = {
     $in    : Op.in,
     $cast  : (value, type) => Sequelize(`CAST(${value} AS ${type})`)
 }
-const sequelize = new Sequelize('boutique', 'myuse', 'mypas', {
+const sequelize = new Sequelize('boutique', 'boutiqueuser', 'boutiquepass', {
   host: 'localhost',
   dialect: 'postgres',
   port: '5432',
@@ -28,7 +28,7 @@ const sequelize = new Sequelize('boutique', 'myuse', 'mypas', {
     }
 });
 sequelize.sync().then(success=>{
-  console.log('VRV Database connected successfully');
+  console.log('Boutique Database connected successfully');
 },err=>{
   console.log("There was a problem to connecting Database "+ err);
 });
